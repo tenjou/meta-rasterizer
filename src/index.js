@@ -24,7 +24,6 @@ let elementMs = null
 const transformedA = new Vector3(0, 0, 0)
 const transformedB = new Vector3(0, 0, 0)
 const transformedC = new Vector3(0, 0, 0)
-const p = new Vector2(0, 0)
 const depthBuffer = new DepthBuffer(width, height)
 
 const init = () => {
@@ -115,8 +114,8 @@ const isCounterClockwise = (a, b, c) => {
 	return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) >= 0
 }
 
-const cross = (a, b, c) => {
-	return (b.x - a.x) * -(c.y - a.y) - -(b.y - a.y) * (c.x - a.x)
+const cross = (a, b, cx, cy) => {
+	return (b.x - a.x) * -(cy - a.y) - -(b.y - a.y) * (cx - a.x)
 }
 
 const drawTriangle = (a, b, c) => {
@@ -125,20 +124,20 @@ const drawTriangle = (a, b, c) => {
 	const maxX = Math.ceil(Math.max(a.x, b.x, c.x))
 	const maxY = Math.ceil(Math.max(a.y, b.y, c.y))
 
-	const area = cross(a, b, c)
+	const area = cross(a, b, c.x, c.y)
 
 	for(let y = minY; y < maxY; y++) {
 		for(let x = minX; x < maxX; x++) {
-			p.x = x + 0.5
-			p.y = y + 0.5
+			const px = x + 0.5
+			const py = y + 0.5
 			
-			const w0 = cross(b, c, p)
+			const w0 = cross(b, c, px, py)
 			if(w0 < 0) continue
 
-			const w1 = cross(c, a, p)
+			const w1 = cross(c, a, px, py)
 			if(w1 < 0) continue
 
-			const w2 = cross(a, b, p)
+			const w2 = cross(a, b, px, py)
 			if(w2 < 0) continue
 
 			const z = (w0 * a.z + w1 * b.z + w2 * c.z) / area
