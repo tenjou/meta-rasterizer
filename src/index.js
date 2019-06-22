@@ -44,7 +44,7 @@ const init = () => {
 	imgData = ctx.getImageData(0, 0, width, height)
 	data = imgData.data
 
-	requestAnimationFrame(render)
+	requestAnimationFrame(renderFunc)
 }
 
 const load = () => {
@@ -55,14 +55,26 @@ const load = () => {
 	})
 }
 
-const render = () => {
-	if(!mesh) {
-		requestAnimationFrame(render)
-		return
-	}
-
+const renderFunc = () => {
 	const tFrameStart = Date.now()
 
+	if(mesh) {
+		render()
+	}
+
+	let tNow = Date.now()
+	fps++
+	if(tNow - tPrev >= 1000) {
+		elementFps.innerHTML = fps
+		elementMs.innerHTML = `${tNow - tFrameStart} ms`
+		fps = 0
+		tPrev = tNow
+	}	
+
+	requestAnimationFrame(renderFunc)
+}
+
+const render = () => {
 	for(let n = 0; n < data.length; n += 4) {
 		data[n + 0] = 0
 		data[n + 1] = 0
@@ -97,17 +109,6 @@ const render = () => {
 	}
 
 	ctx.putImageData(imgData, 0, 0)
-
-	let tNow = Date.now()
-	fps++
-	if(tNow - tPrev >= 1000) {
-		elementFps.innerHTML = fps
-		elementMs.innerHTML = `${tNow - tFrameStart} ms`
-		fps = 0
-		tPrev = tNow
-	}	
-
-	requestAnimationFrame(render)
 }
 
 const isCounterClockwise = (a, b, c) => {
@@ -132,10 +133,13 @@ const drawTriangle = (a, b, c) => {
 			p.y = y + 0.5
 			
 			const w0 = cross(b, c, p)
-			const w1 = cross(c, a, p)
-			const w2 = cross(a, b, p)
+			if(w0 < 0) continue
 
-			if(w0 < 0 || w1 < 0 || w2 < 0) continue
+			const w1 = cross(c, a, p)
+			if(w1 < 0) continue
+
+			const w2 = cross(a, b, p)
+			if(w2 < 0) continue
 
 			const z = (w0 * a.z + w1 * b.z + w2 * c.z) / area
 			if(depthBuffer.test(x, y, z)) {
